@@ -1,19 +1,40 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+// Basketball Rank Match App - Neon Color Theme
+const neonLime = '#C6FF00';
+const neonCyan = '#00E5FF';
+const pureBlack = '#000000';
+const darkGray = '#1A1A1A';
+const mediumGray = '#333333';
+const lightGray = '#666666';
 
 export default {
   light: {
-    text: '#000',
-    background: '#fff',
-    tint: tintColorLight,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorLight,
+    text: '#FFFFFF',
+    background: pureBlack,
+    tint: neonLime,
+    tabIconDefault: lightGray,
+    tabIconSelected: neonLime,
+    secondary: neonCyan,
+    surface: darkGray,
+    border: mediumGray,
+    success: neonLime,
+    warning: '#FFB300',
+    error: '#FF3B30',
+    win: neonLime,
+    lose: '#FF453A',
   },
   dark: {
-    text: '#fff',
-    background: '#000',
-    tint: tintColorDark,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
+    text: '#FFFFFF',
+    background: pureBlack,
+    tint: neonLime,
+    tabIconDefault: lightGray,
+    tabIconSelected: neonLime,
+    secondary: neonCyan,
+    surface: darkGray,
+    border: mediumGray,
+    success: neonLime,
+    warning: '#FFB300',
+    error: '#FF3B30',
+    win: neonLime,
+    lose: '#FF453A',
   },
 };
