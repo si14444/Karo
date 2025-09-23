@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { User, Match, UserStats, PendingMatch } from '@/types';
+import { User, Match, UserStats, PendingMatch, GameRoom, LiveMatch, MatchResult } from '@/types';
 
 // Mock data for development
 const MOCK_USERS: User[] = [
@@ -118,6 +118,9 @@ interface AppState {
   matches: Match[];
   pendingMatches: PendingMatch[];
   users: User[];
+  gameRooms: GameRoom[];
+  liveMatches: LiveMatch[];
+  matchResults: MatchResult[];
   isLoading: boolean;
 }
 
@@ -127,6 +130,13 @@ type AppAction =
   | { type: 'ADD_PENDING_MATCH'; payload: PendingMatch }
   | { type: 'UPDATE_MATCH'; payload: { id: string; updates: Partial<Match> } }
   | { type: 'REMOVE_PENDING_MATCH'; payload: string }
+  | { type: 'CREATE_GAME_ROOM'; payload: GameRoom }
+  | { type: 'JOIN_GAME_ROOM'; payload: { roomId: string; guestId: string } }
+  | { type: 'UPDATE_GAME_ROOM'; payload: { id: string; updates: Partial<GameRoom> } }
+  | { type: 'LEAVE_GAME_ROOM'; payload: { roomId: string; userId: string } }
+  | { type: 'START_LIVE_MATCH'; payload: LiveMatch }
+  | { type: 'UPDATE_LIVE_MATCH'; payload: { id: string; updates: Partial<LiveMatch> } }
+  | { type: 'END_LIVE_MATCH'; payload: { matchId: string; result: MatchResult } }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'LOAD_INITIAL_DATA' };
 
@@ -135,6 +145,9 @@ const initialState: AppState = {
   matches: [],
   pendingMatches: [],
   users: [],
+  gameRooms: [],
+  liveMatches: [],
+  matchResults: [],
   isLoading: false,
 };
 
@@ -162,6 +175,64 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
+    case 'CREATE_GAME_ROOM':
+      return { ...state, gameRooms: [...state.gameRooms, action.payload] };
+    case 'JOIN_GAME_ROOM':
+      return {
+        ...state,
+        gameRooms: state.gameRooms.map(room =>
+          room.id === action.payload.roomId
+            ? { ...room, guestId: action.payload.guestId, status: 'ready' as const }
+            : room
+        ),
+      };
+    case 'UPDATE_GAME_ROOM':
+      return {
+        ...state,
+        gameRooms: state.gameRooms.map(room =>
+          room.id === action.payload.id
+            ? { ...room, ...action.payload.updates }
+            : room
+        ),
+      };
+    case 'LEAVE_GAME_ROOM':
+      return {
+        ...state,
+        gameRooms: state.gameRooms.map(room => {
+          if (room.id === action.payload.roomId) {
+            // If host leaves, cancel the room
+            if (room.hostId === action.payload.userId) {
+              return { ...room, status: 'cancelled' as const };
+            }
+            // If guest leaves, remove guest and set status to waiting
+            if (room.guestId === action.payload.userId) {
+              return {
+                ...room,
+                guestId: undefined,
+                status: 'waiting_for_guest' as const
+              };
+            }
+          }
+          return room;
+        }),
+      };
+    case 'START_LIVE_MATCH':
+      return { ...state, liveMatches: [...state.liveMatches, action.payload] };
+    case 'UPDATE_LIVE_MATCH':
+      return {
+        ...state,
+        liveMatches: state.liveMatches.map(match =>
+          match.id === action.payload.id
+            ? { ...match, ...action.payload.updates }
+            : match
+        ),
+      };
+    case 'END_LIVE_MATCH':
+      return {
+        ...state,
+        liveMatches: state.liveMatches.filter(match => match.id !== action.payload.matchId),
+        matchResults: [...state.matchResults, action.payload.result],
+      };
     case 'LOAD_INITIAL_DATA':
       return {
         ...state,
@@ -169,6 +240,9 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         matches: MOCK_MATCHES,
         users: MOCK_USERS,
         pendingMatches: [],
+        gameRooms: [],
+        liveMatches: [],
+        matchResults: [],
       };
     default:
       return state;
@@ -183,6 +257,14 @@ interface AppContextType {
   addMatch: (match: Omit<Match, 'id' | 'createdAt' | 'updatedAt'>) => void;
   addPendingMatch: (match: Omit<PendingMatch, 'id' | 'createdAt'>) => void;
   convertPendingToMatch: (pendingMatchId: string, score1: number, score2: number) => void;
+  // New 3-stage match flow functions
+  createGameRoom: (roomData: Omit<GameRoom, 'id' | 'createdAt' | 'expiresAt'>) => GameRoom;
+  joinGameRoom: (inviteCode: string, guestId: string) => GameRoom | null;
+  startLiveMatch: (roomId: string) => LiveMatch | null;
+  updateLiveMatch: (matchId: string, updates: Partial<LiveMatch>) => void;
+  endLiveMatch: (matchId: string, result: Omit<MatchResult, 'createdAt'>) => void;
+  findRoomByInviteCode: (inviteCode: string) => GameRoom | null;
+  leaveGameRoom: (roomId: string, userId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -263,6 +345,94 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     dispatch({ type: 'REMOVE_PENDING_MATCH', payload: pendingMatchId });
   };
 
+  // 3-stage match flow functions
+  const createGameRoom = (roomData: Omit<GameRoom, 'id' | 'createdAt' | 'expiresAt'>): GameRoom => {
+    const roomId = `room_${Date.now()}`;
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // 24시간 후 만료
+
+    const newRoom: GameRoom = {
+      ...roomData,
+      id: roomId,
+      createdAt: new Date(),
+      expiresAt,
+    };
+
+    dispatch({ type: 'CREATE_GAME_ROOM', payload: newRoom });
+    return newRoom;
+  };
+
+  const joinGameRoom = (inviteCode: string, guestId: string): GameRoom | null => {
+    const room = state.gameRooms.find(r => r.inviteCode === inviteCode.toUpperCase());
+    if (!room || room.status !== 'waiting_for_guest') return null;
+
+    dispatch({ type: 'JOIN_GAME_ROOM', payload: { roomId: room.id, guestId } });
+    return { ...room, guestId, status: 'ready' };
+  };
+
+  const startLiveMatch = (roomId: string): LiveMatch | null => {
+    const room = state.gameRooms.find(r => r.id === roomId);
+    if (!room || !room.guestId || room.status !== 'ready') return null;
+
+    const matchId = `match_${Date.now()}`;
+    const newMatch: LiveMatch = {
+      id: matchId,
+      roomId: room.id,
+      player1Id: room.hostId,
+      player2Id: room.guestId,
+      place: room.place,
+      date: room.date,
+      status: 'in_progress',
+      startTime: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    dispatch({ type: 'START_LIVE_MATCH', payload: newMatch });
+    return newMatch;
+  };
+
+  const updateLiveMatch = (matchId: string, updates: Partial<LiveMatch>) => {
+    dispatch({ type: 'UPDATE_LIVE_MATCH', payload: { id: matchId, updates } });
+  };
+
+  const endLiveMatch = (matchId: string, result: Omit<MatchResult, 'createdAt'>) => {
+    const fullResult: MatchResult = {
+      ...result,
+      createdAt: new Date(),
+    };
+
+    dispatch({ type: 'END_LIVE_MATCH', payload: { matchId, result: fullResult } });
+
+    // Convert to final match
+    const liveMatch = state.liveMatches.find(m => m.id === matchId);
+    if (liveMatch) {
+      const finalMatch: Match = {
+        id: `final_${Date.now()}`,
+        date: liveMatch.date,
+        place: liveMatch.place,
+        player1Id: liveMatch.player1Id,
+        player2Id: liveMatch.player2Id,
+        score1: result.player1Score,
+        score2: result.player2Score,
+        winnerId: result.winnerId,
+        isConfirmed: !result.needsConfirmation,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      dispatch({ type: 'ADD_MATCH', payload: finalMatch });
+    }
+  };
+
+  const findRoomByInviteCode = (inviteCode: string): GameRoom | null => {
+    return state.gameRooms.find(room => room.inviteCode === inviteCode.toUpperCase()) || null;
+  };
+
+  const leaveGameRoom = (roomId: string, userId: string) => {
+    dispatch({ type: 'LEAVE_GAME_ROOM', payload: { roomId, userId } });
+  };
+
   const value: AppContextType = {
     state,
     dispatch,
@@ -271,6 +441,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addMatch,
     addPendingMatch,
     convertPendingToMatch,
+    createGameRoom,
+    joinGameRoom,
+    startLiveMatch,
+    updateLiveMatch,
+    endLiveMatch,
+    findRoomByInviteCode,
+    leaveGameRoom,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

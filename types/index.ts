@@ -26,6 +26,45 @@ export interface Match {
   updatedAt: Date;
 }
 
+// 3-Stage Match Flow Types
+export type MatchStatus = 'waiting' | 'in_progress' | 'finished' | 'completed' | 'disputed';
+
+export interface GameRoom {
+  id: string;
+  inviteCode: string;
+  hostId: string;
+  guestId?: string;
+  place: string;
+  date: Date;
+  status: 'waiting_for_guest' | 'ready' | 'cancelled';
+  createdAt: Date;
+  expiresAt: Date;
+}
+
+export interface LiveMatch {
+  id: string;
+  roomId: string;
+  player1Id: string;
+  player2Id: string;
+  place: string;
+  date: Date;
+  status: MatchStatus;
+  startTime?: Date;
+  endTime?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MatchResult {
+  matchId: string;
+  player1Score: number;
+  player2Score: number;
+  winnerId: string;
+  confirmedBy: string[];
+  needsConfirmation: boolean;
+  createdAt: Date;
+}
+
 export interface PendingMatch {
   id: string;
   date: Date;
@@ -34,13 +73,6 @@ export interface PendingMatch {
   player1Id: string;
   player2Id: string;
   createdAt: Date;
-}
-
-export interface MatchResult {
-  matchId: string;
-  player1Score: number;
-  player2Score: number;
-  winnerId: string;
 }
 
 export interface UserStats {
