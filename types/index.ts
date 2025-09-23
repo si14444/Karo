@@ -1,5 +1,10 @@
 // Basketball Rank Match App - Type Definitions
+// 기존 타입은 호환성을 위해 유지하고, 새로운 Firebase 타입은 별도 import
 
+// Firebase 데이터 타입 (새로운 정규화된 구조)
+export * from './data';
+
+// 기존 클라이언트 타입들 (호환성 유지)
 export interface User {
   id: string;
   nickname: string;
