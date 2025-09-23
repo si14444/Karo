@@ -4,9 +4,11 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { AppProvider } from '@/contexts/AppContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import Colors from '@/constants/Colors';
 
 export {
@@ -16,7 +18,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'auth/login',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -63,13 +65,47 @@ function RootLayoutNav() {
   };
 
   return (
-    <AppProvider>
-      <ThemeProvider value={basketballTheme}>
-        <Stack>
+    <AuthProvider>
+      <AppProvider>
+        <ThemeProvider value={basketballTheme}>
+          <AuthenticatedApp />
+        </ThemeProvider>
+      </AppProvider>
+    </AuthProvider>
+  );
+}
+
+function AuthenticatedApp() {
+  const { state } = useAuth();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+
+  // 로딩 중일 때 스플래시 화면
+  if (state.isLoading) {
+    return (
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: colors.background
+      }}>
+        <ActivityIndicator size="large" color={colors.tint} />
+      </View>
+    );
+  }
+
+  return (
+    <Stack>
+      {state.isAuthenticated ? (
+        // 인증된 사용자 - 메인 앱
+        <>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-      </ThemeProvider>
-    </AppProvider>
+        </>
+      ) : (
+        // 인증되지 않은 사용자 - 로그인 화면
+        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+      )}
+    </Stack>
   );
 }

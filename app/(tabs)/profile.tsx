@@ -14,6 +14,7 @@ import { Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useUserData } from "@/hooks/useUserData";
@@ -21,6 +22,7 @@ import { useSafeAreaContainer } from "@/hooks/useSafeAreaContainer";
 
 export default function ProfileScreen() {
   const { state, getUserStats } = useApp();
+  const { logout, state: authState } = useAuth();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
   const insets = useSafeAreaInsets();
@@ -71,9 +73,14 @@ export default function ProfileScreen() {
       {
         text: "로그아웃",
         style: "destructive",
-        onPress: () => {
-          // Here you would handle logout logic
-          Alert.alert("알림", "로그아웃되었습니다.");
+        onPress: async () => {
+          try {
+            await logout();
+            Alert.alert("알림", "로그아웃되었습니다.");
+          } catch (error) {
+            Alert.alert("오류", "로그아웃 중 오류가 발생했습니다.");
+            console.error("로그아웃 에러:", error);
+          }
         },
       },
     ]);

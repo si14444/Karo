@@ -9,7 +9,8 @@
       "Bash(ls:*)",
       "Bash(grep:*)",
       "Bash(npm update:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []
