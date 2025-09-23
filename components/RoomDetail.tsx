@@ -150,7 +150,7 @@ export default function RoomDetail({ room, isHost, onLeaveRoom, onStartMatch }: 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderColor: colors.border, paddingTop: insets.top + 16 }]}>
         <TouchableOpacity onPress={handleLeaveRoom} style={styles.backButton}>
           <FontAwesome name="arrow-left" size={20} color={colors.text} />
           <Text style={[styles.backButtonText, { color: colors.text }]}>나가기</Text>
@@ -350,7 +350,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    paddingTop: 60,
     borderBottomWidth: 1,
   },
   backButton: {

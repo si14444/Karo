@@ -295,7 +295,7 @@ export default function MatchScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Tab Selector */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: insets.top + 20 }]}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'create' && { backgroundColor: colors.tint }]}
           onPress={() => setActiveTab('create')}
@@ -325,7 +325,7 @@ export default function MatchScreen() {
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 20, paddingTop: insets.top + 20 }}
       >
         {activeTab === 'create' && (
           <View style={styles.formContainer}>

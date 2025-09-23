@@ -188,7 +188,7 @@ export default function StatsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Tab Selector */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: insets.top + 20 }]}>
         <TouchableOpacity
           style={[
             styles.tab,

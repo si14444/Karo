@@ -42,15 +42,7 @@ export default function TabLayout() {
           left: 0,
           right: 0,
         },
-        headerStyle: {
-          backgroundColor: Colors[colorScheme ?? 'light'].background,
-        },
-        headerTintColor: Colors[colorScheme ?? 'light'].text,
-        headerTitleStyle: {
-          color: Colors[colorScheme ?? 'light'].tint,
-          fontWeight: 'bold',
-        },
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: false,
       }}>
       <Tabs.Screen
         name="index"

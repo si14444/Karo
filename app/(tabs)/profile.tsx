@@ -134,7 +134,7 @@ export default function ProfileScreen() {
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 20, paddingTop: insets.top + 20 }}
       >
         {/* Profile Header */}
         <View style={[styles.profileHeader, { backgroundColor: colors.surface, borderColor: colors.border }]}>

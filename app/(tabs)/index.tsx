@@ -24,7 +24,7 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+      contentContainerStyle={{ paddingBottom: tabBarHeight + 20, paddingTop: insets.top + 20 }}
     >
       {/* User Rank Card */}
       <View style={[styles.rankCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -66,20 +66,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Quick Actions */}
-      <View style={styles.actionsContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.tint }]}>빠른 메뉴</Text>
-        <View style={styles.actionsRow}>
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.tint }]}>
-            <FontAwesome name="plus" size={24} color={colors.tint} />
-            <Text style={[styles.actionText, { color: colors.text }]}>경기 등록</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.surface, borderColor: colors.secondary }]}>
-            <FontAwesome name="edit" size={24} color={colors.secondary} />
-            <Text style={[styles.actionText, { color: colors.text }]}>결과 입력</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* Recent Matches */}
       <View style={styles.recentContainer}>
