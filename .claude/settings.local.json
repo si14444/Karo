@@ -6,7 +6,10 @@
       "Bash(rm:*)",
       "Bash(npm install:*)",
       "Bash(npm start)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(npm update:*)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

@@ -8,8 +8,8 @@ import {
   Modal,
   Dimensions,
   Share,
-  Clipboard,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Text, View } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,7 +31,6 @@ export default function RoomDetail({ room, isHost, onLeaveRoom, onStartMatch }: 
   const {
     state,
     startLiveMatch,
-    updateGameRoom,
     leaveGameRoom,
   } = useApp();
   const colorScheme = useColorScheme();

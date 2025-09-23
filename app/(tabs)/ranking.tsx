@@ -1,29 +1,35 @@
 import React, { useState } from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, ScrollView, Platform } from 'react-native';
 import { Text, View } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { User } from '@/types';
+import TabSelector from '@/components/ui/TabSelector';
+import EmptyState from '@/components/ui/EmptyState';
+import { useSafeAreaContainer } from '@/hooks/useSafeAreaContainer';
+import { useUserData } from '@/hooks/useUserData';
 
 export default function RankingScreen() {
   const { state, getRankings } = useApp();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const insets = useSafeAreaInsets();
+  const { contentContainerStyle } = useSafeAreaContainer();
+  const { currentUser } = useUserData();
   const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
 
   const allRankings = getRankings();
   const friendsRankings = allRankings.filter(user =>
-    state.currentUser?.friends.includes(user.id) || user.id === state.currentUser?.id
+    currentUser?.friends.includes(user.id) || user.id === currentUser?.id
   );
 
   const displayRankings = activeTab === 'all' ? allRankings : friendsRankings;
 
-  // 탭 바 높이만큼 하단 패딩 추가 (좀 더 낮게)
-  const tabBarHeight = Platform.OS === 'android' ? 85 + insets.bottom : 80 + insets.bottom;
+  const tabs = [
+    { id: 'all', label: '전체 랭킹' },
+    { id: 'friends', label: '친구 랭킹' },
+  ];
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -45,37 +51,11 @@ export default function RankingScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Tab Selector */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: insets.top + 20 }]}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'all' && { backgroundColor: colors.tint }
-          ]}
-          onPress={() => setActiveTab('all')}
-        >
-          <Text style={[
-            styles.tabText,
-            { color: activeTab === 'all' ? colors.background : colors.text }
-          ]}>
-            전체 랭킹
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'friends' && { backgroundColor: colors.tint }
-          ]}
-          onPress={() => setActiveTab('friends')}
-        >
-          <Text style={[
-            styles.tabText,
-            { color: activeTab === 'friends' ? colors.background : colors.text }
-          ]}>
-            친구 랭킹
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TabSelector
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as 'all' | 'friends')}
+      />
 
       {/* Header */}
       <View style={styles.header}>
@@ -91,12 +71,12 @@ export default function RankingScreen() {
       <ScrollView
         style={styles.rankingList}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+        contentContainerStyle={contentContainerStyle}
       >
         {displayRankings.map((user, index) => {
           const rank = index + 1;
           const rankIcon = getRankIcon(rank);
-          const isCurrentUser = user.id === state.currentUser?.id;
+          const isCurrentUser = user.id === currentUser?.id;
 
           return (
             <View
@@ -157,15 +137,11 @@ export default function RankingScreen() {
       </ScrollView>
 
       {displayRankings.length === 0 && (
-        <View style={[styles.emptyState, { backgroundColor: colors.surface }]}>
-          <FontAwesome name="users" size={48} color={colors.tabIconDefault} />
-          <Text style={[styles.emptyText, { color: colors.text }]}>
-            {activeTab === 'all' ? '등록된 사용자가 없습니다' : '친구가 없습니다'}
-          </Text>
-          <Text style={[styles.emptySubtext, { color: colors.tabIconDefault }]}>
-            {activeTab === 'all' ? '첫 번째 플레이어가 되어보세요!' : '친구를 추가해보세요!'}
-          </Text>
-        </View>
+        <EmptyState
+          icon="users"
+          title={activeTab === 'all' ? '등록된 사용자가 없습니다' : '친구가 없습니다'}
+          subtitle={activeTab === 'all' ? '첫 번째 플레이어가 되어보세요!' : '친구를 추가해보세요!'}
+        />
       )}
     </View>
   );
@@ -175,24 +151,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-    borderWidth: 1,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   header: {
     marginBottom: 20,
@@ -266,22 +224,5 @@ const styles = StyleSheet.create({
   },
   scoreLabel: {
     fontSize: 10,
-  },
-  emptyState: {
-    borderRadius: 12,
-    padding: 40,
-    alignItems: 'center',
-    marginTop: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: 'center',
   },
 });

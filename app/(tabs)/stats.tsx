@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { StyleSheet, ScrollView, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import { StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { Text, View } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { User, Match } from '@/types';
+import TabSelector from '@/components/ui/TabSelector';
+import EmptyState from '@/components/ui/EmptyState';
+import Card from '@/components/ui/Card';
+import StatItem from '@/components/ui/StatItem';
+import { useSafeAreaContainer } from '@/hooks/useSafeAreaContainer';
+import { useUserData } from '@/hooks/useUserData';
 
 const { width } = Dimensions.get('window');
 
@@ -31,21 +36,25 @@ export default function StatsScreen() {
   const { state, getUserStats } = useApp();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const insets = useSafeAreaInsets();
+  const { contentContainerStyle } = useSafeAreaContainer();
+  const { currentUser } = useUserData();
   const [activeTab, setActiveTab] = useState<'overview' | 'monthly' | 'opponents'>('overview');
 
-  // Tab bar height for padding
-  const tabBarHeight = Platform.OS === 'android' ? 85 + insets.bottom : 80 + insets.bottom;
+  const currentUserStats = currentUser ? getUserStats(currentUser.id) : null;
 
-  const currentUserStats = state.currentUser ? getUserStats(state.currentUser.id) : null;
+  const tabs = [
+    { id: 'overview', label: '전체' },
+    { id: 'monthly', label: '월별' },
+    { id: 'opponents', label: '상대전적' },
+  ];
 
   // Calculate monthly statistics
   const getMonthlyStats = (): MonthlyStats[] => {
-    if (!state.currentUser) return [];
+    if (!currentUser) return [];
 
     const monthlyData: { [key: string]: MonthlyStats } = {};
     const userMatches = state.matches.filter(
-      match => match.player1Id === state.currentUser!.id || match.player2Id === state.currentUser!.id
+      match => match.player1Id === currentUser.id || match.player2Id === currentUser.id
     );
 
     userMatches.forEach(match => {
@@ -63,7 +72,7 @@ export default function StatsScreen() {
       }
 
       monthlyData[monthKey].totalMatches++;
-      if (match.winnerId === state.currentUser!.id) {
+      if (match.winnerId === currentUser.id) {
         monthlyData[monthKey].wins++;
       } else {
         monthlyData[monthKey].losses++;
@@ -80,15 +89,15 @@ export default function StatsScreen() {
 
   // Calculate opponent statistics
   const getOpponentStats = (): OpponentStats[] => {
-    if (!state.currentUser) return [];
+    if (!currentUser) return [];
 
     const opponentData: { [key: string]: OpponentStats } = {};
     const userMatches = state.matches.filter(
-      match => match.player1Id === state.currentUser!.id || match.player2Id === state.currentUser!.id
+      match => match.player1Id === currentUser.id || match.player2Id === currentUser.id
     );
 
     userMatches.forEach(match => {
-      const opponentId = match.player1Id === state.currentUser!.id ? match.player2Id : match.player1Id;
+      const opponentId = match.player1Id === currentUser.id ? match.player2Id : match.player1Id;
       const opponent = state.users.find(u => u.id === opponentId);
 
       if (!opponent) return;
@@ -105,14 +114,14 @@ export default function StatsScreen() {
       }
 
       opponentData[opponentId].totalMatches++;
-      if (match.winnerId === state.currentUser!.id) {
+      if (match.winnerId === currentUser.id) {
         opponentData[opponentId].wins++;
       } else {
         opponentData[opponentId].losses++;
       }
 
       // Update last match if this one is more recent
-      if (match.date > opponentData[opponentId].lastMatch!.date) {
+      if (!opponentData[opponentId].lastMatch || match.date > opponentData[opponentId].lastMatch.date) {
         opponentData[opponentId].lastMatch = match;
       }
     });
@@ -131,10 +140,10 @@ export default function StatsScreen() {
 
   // Calculate additional overview stats
   const getStreakInfo = () => {
-    if (!state.currentUser) return { current: 0, longest: 0, type: 'none' as 'win' | 'lose' | 'none' };
+    if (!currentUser) return { current: 0, longest: 0, type: 'none' as 'win' | 'lose' | 'none' };
 
     const userMatches = state.matches
-      .filter(match => match.player1Id === state.currentUser!.id || match.player2Id === state.currentUser!.id)
+      .filter(match => match.player1Id === currentUser.id || match.player2Id === currentUser.id)
       .sort((a, b) => b.date.getTime() - a.date.getTime());
 
     let currentStreak = 0;
@@ -144,7 +153,7 @@ export default function StatsScreen() {
     let lastResult: 'win' | 'lose' | null = null;
 
     userMatches.forEach((match, index) => {
-      const isWin = match.winnerId === state.currentUser!.id;
+      const isWin = match.winnerId === currentUser.id;
       const result = isWin ? 'win' : 'lose';
 
       if (index === 0) {
@@ -187,56 +196,16 @@ export default function StatsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Tab Selector */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: insets.top + 20 }]}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'overview' && { backgroundColor: colors.tint }
-          ]}
-          onPress={() => setActiveTab('overview')}
-        >
-          <Text style={[
-            styles.tabText,
-            { color: activeTab === 'overview' ? colors.background : colors.text }
-          ]}>
-            전체
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'monthly' && { backgroundColor: colors.tint }
-          ]}
-          onPress={() => setActiveTab('monthly')}
-        >
-          <Text style={[
-            styles.tabText,
-            { color: activeTab === 'monthly' ? colors.background : colors.text }
-          ]}>
-            월별
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'opponents' && { backgroundColor: colors.tint }
-          ]}
-          onPress={() => setActiveTab('opponents')}
-        >
-          <Text style={[
-            styles.tabText,
-            { color: activeTab === 'opponents' ? colors.background : colors.text }
-          ]}>
-            상대전적
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TabSelector
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as 'overview' | 'monthly' | 'opponents')}
+      />
 
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: tabBarHeight + 20 }}
+        contentContainerStyle={contentContainerStyle}
       >
         {activeTab === 'overview' && (
           <View>
@@ -246,7 +215,7 @@ export default function StatsScreen() {
                 전체 통계
               </Text>
               <Text style={[styles.headerSubtitle, { color: colors.text }]}>
-                {state.currentUser?.nickname || 'Player'}님의 경기 분석
+                {currentUser?.nickname || 'Player'}님의 경기 분석
               </Text>
             </View>
 
@@ -330,15 +299,11 @@ export default function StatsScreen() {
                 </View>
               </>
             ) : (
-              <View style={[styles.emptyState, { backgroundColor: colors.surface }]}>
-                <FontAwesome name="bar-chart" size={48} color={colors.tabIconDefault} />
-                <Text style={[styles.emptyText, { color: colors.text }]}>
-                  아직 경기 기록이 없습니다
-                </Text>
-                <Text style={[styles.emptySubtext, { color: colors.tabIconDefault }]}>
-                  첫 경기를 시작해보세요!
-                </Text>
-              </View>
+              <EmptyState
+                icon="bar-chart"
+                title="아직 경기 기록이 없습니다"
+                subtitle="첫 경기를 시작해보세요!"
+              />
             )}
           </View>
         )}
@@ -391,15 +356,11 @@ export default function StatsScreen() {
                 </View>
               ))
             ) : (
-              <View style={[styles.emptyState, { backgroundColor: colors.surface }]}>
-                <FontAwesome name="calendar" size={48} color={colors.tabIconDefault} />
-                <Text style={[styles.emptyText, { color: colors.text }]}>
-                  월별 데이터가 없습니다
-                </Text>
-                <Text style={[styles.emptySubtext, { color: colors.tabIconDefault }]}>
-                  경기를 시작하면 월별 통계를 볼 수 있습니다
-                </Text>
-              </View>
+              <EmptyState
+                icon="calendar"
+                title="월별 데이터가 없습니다"
+                subtitle="경기를 시작하면 월별 통계를 볼 수 있습니다"
+              />
             )}
           </View>
         )}
@@ -470,15 +431,11 @@ export default function StatsScreen() {
                 </View>
               ))
             ) : (
-              <View style={[styles.emptyState, { backgroundColor: colors.surface }]}>
-                <FontAwesome name="users" size={48} color={colors.tabIconDefault} />
-                <Text style={[styles.emptyText, { color: colors.text }]}>
-                  상대 전적이 없습니다
-                </Text>
-                <Text style={[styles.emptySubtext, { color: colors.tabIconDefault }]}>
-                  다른 플레이어와 경기해보세요!
-                </Text>
-              </View>
+              <EmptyState
+                icon="users"
+                title="상대 전적이 없습니다"
+                subtitle="다른 플레이어와 경기해보세요!"
+              />
             )}
           </View>
         )}
@@ -491,24 +448,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-    borderWidth: 1,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   content: {
     flex: 1,
@@ -705,22 +644,5 @@ const styles = StyleSheet.create({
   lastMatchScore: {
     fontSize: 12,
     fontWeight: 'bold',
-  },
-  emptyState: {
-    borderRadius: 12,
-    padding: 40,
-    alignItems: 'center',
-    marginTop: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: 'center',
   },
 });
