@@ -10,6 +10,7 @@ import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { initializeKakaoSDK } from "@react-native-kakao/core";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -29,6 +30,15 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
   });
+
+  // Initialize Kakao SDK - disabled for Expo Go compatibility
+  // useEffect(() => {
+  //   try {
+  //     initializeKakaoSDK("ee9deeef87787f7d6b6180601aafe92e");
+  //   } catch (error) {
+  //     console.log('Kakao SDK initialization failed (development mode):', error);
+  //   }
+  // }, []);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -86,20 +96,20 @@ function AuthenticatedApp() {
   useEffect(() => {
     if (state.isLoading) return;
 
-    const inAuthGroup = segments[0] === 'auth';
+    const inAuthGroup = segments[0] === "auth";
 
-    console.log('Auth state:', state);
-    console.log('Current segments:', segments);
-    console.log('In auth group:', inAuthGroup);
+    console.log("Auth state:", state);
+    console.log("Current segments:", segments);
+    console.log("In auth group:", inAuthGroup);
 
     if (!state.isAuthenticated && !inAuthGroup) {
       // 인증되지 않았고 auth 그룹에 있지 않으면 로그인으로 리디렉션
-      console.log('Redirecting to login');
-      router.replace('/auth/login');
+      console.log("Redirecting to login");
+      router.replace("/auth/login");
     } else if (state.isAuthenticated && inAuthGroup) {
       // 인증되었고 auth 그룹에 있으면 메인 앱으로 리디렉션
-      console.log('Redirecting to tabs');
-      router.replace('/(tabs)');
+      console.log("Redirecting to tabs");
+      router.replace("/(tabs)");
     }
   }, [state.isAuthenticated, state.isLoading, segments, router]);
 

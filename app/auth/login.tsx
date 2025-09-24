@@ -30,12 +30,12 @@ export default function LoginScreen() {
   const handleKakaoLogin = async () => {
     try {
       await loginWithKakao();
-      Alert.alert("로그인 성공", "카카오 계정으로 로그인되었습니다.", [
-        {
-          text: "확인",
-          onPress: () => router.replace("/(tabs)"),
-        },
-      ]);
+      // Alert.alert("로그인 성공", "카카오 계정으로 로그인되었습니다.", [
+      //   {
+      //     text: "확인",
+      //     onPress: () => router.replace("/(tabs)"),
+      //   },
+      // ]);
     } catch (error) {
       Alert.alert("로그인 실패", "로그인 중 오류가 발생했습니다.");
       console.error("카카오 로그인 에러:", error);
