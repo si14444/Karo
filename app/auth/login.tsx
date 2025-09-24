@@ -1,28 +1,28 @@
-import React, { useState } from 'react';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React from "react";
 import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
   StyleSheet,
-  View,
   Text,
   TouchableOpacity,
-  Image,
-  Alert,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useAuth } from '@/contexts/AuthContext';
+import { useColorScheme } from "@/components/useColorScheme";
+import Colors from "@/constants/Colors";
+import { useAuth } from "@/contexts/AuthContext";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
+  const colors = Colors[colorScheme ?? "light"];
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { loginWithKakao, loginAsGuest, state } = useAuth();
@@ -30,32 +30,35 @@ export default function LoginScreen() {
   const handleKakaoLogin = async () => {
     try {
       await loginWithKakao();
-      Alert.alert('로그인 성공', '카카오 계정으로 로그인되었습니다.', [
+      Alert.alert("로그인 성공", "카카오 계정으로 로그인되었습니다.", [
         {
-          text: '확인',
-          onPress: () => router.replace('/(tabs)'),
+          text: "확인",
+          onPress: () => router.replace("/(tabs)"),
         },
       ]);
     } catch (error) {
-      Alert.alert('로그인 실패', '로그인 중 오류가 발생했습니다.');
-      console.error('카카오 로그인 에러:', error);
+      Alert.alert("로그인 실패", "로그인 중 오류가 발생했습니다.");
+      console.error("카카오 로그인 에러:", error);
     }
   };
 
   const handleGuestLogin = () => {
     Alert.alert(
-      '게스트 로그인',
-      '게스트로 로그인하시겠습니까? 일부 기능이 제한될 수 있습니다.',
+      "게스트 로그인",
+      "게스트로 로그인하시겠습니까? 일부 기능이 제한될 수 있습니다.",
       [
-        { text: '취소', style: 'cancel' },
+        { text: "취소", style: "cancel" },
         {
-          text: '게스트 로그인',
+          text: "게스트 로그인",
           onPress: async () => {
             try {
               await loginAsGuest();
-              router.replace('/(tabs)');
+              router.replace("/(tabs)");
             } catch (error) {
-              Alert.alert('로그인 실패', '게스트 로그인 중 오류가 발생했습니다.');
+              Alert.alert(
+                "로그인 실패",
+                "게스트 로그인 중 오류가 발생했습니다."
+              );
             }
           },
         },
@@ -71,9 +74,10 @@ export default function LoginScreen() {
       <View style={styles.content}>
         {/* 로고 및 타이틀 */}
         <View style={styles.logoContainer}>
-          <View style={[styles.logoCircle, { backgroundColor: colors.background }]}>
-            <FontAwesome name="circle" size={60} color={colors.tint} />
-          </View>
+          <Image
+            source={require("../../assets/images/logo.png")}
+            style={{ width: 130, height: 130 }}
+          />
           <Text style={[styles.appTitle, { color: colors.background }]}>
             KARO
           </Text>
@@ -111,7 +115,9 @@ export default function LoginScreen() {
             disabled={state.isLoading}
           >
             <FontAwesome name="user" size={20} color={colors.background} />
-            <Text style={[styles.guestButtonText, { color: colors.background }]}>
+            <Text
+              style={[styles.guestButtonText, { color: colors.background }]}
+            >
               게스트로 둘러보기
             </Text>
           </TouchableOpacity>
@@ -137,22 +143,22 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 30,
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 80,
   },
   logoCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -163,7 +169,7 @@ const styles = StyleSheet.create({
   },
   appTitle: {
     fontSize: 36,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
     letterSpacing: 2,
   },
@@ -172,15 +178,15 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   loginContainer: {
-    width: '100%',
+    width: "100%",
     maxWidth: 300,
     gap: 16,
   },
   kakaoButton: {
-    backgroundColor: '#FEE500',
+    backgroundColor: "#FEE500",
     paddingVertical: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -190,33 +196,33 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonContent: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   kakaoIcon: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#000000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#000000",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   kakaoIconText: {
-    color: '#FEE500',
+    color: "#FEE500",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   kakaoButtonText: {
-    color: '#000000',
+    color: "#000000",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   guestButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 2,
@@ -224,15 +230,15 @@ const styles = StyleSheet.create({
   },
   guestButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   footer: {
     marginTop: 60,
-    alignItems: 'center',
+    alignItems: "center",
   },
   footerText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.8,
     lineHeight: 20,
   },
