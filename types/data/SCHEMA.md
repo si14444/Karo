@@ -5,6 +5,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ## 컬렉션 구조
 
 ### 1. `users` - 사용자 정보
+
 ```typescript
 {
   id: string (auto-generated)
@@ -15,43 +16,22 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
   rankScore: number
   winCount: number
   loseCount: number
-  isActive: boolean
-  lastLoginAt: Timestamp
   createdAt: Timestamp
-  updatedAt: Timestamp
 }
 ```
 
 **인덱스:**
+
 - `uid` (단일)
 - `email` (단일)
 - `nickname` (단일)
 - `rankScore` (내림차순)
-- `isActive, rankScore` (복합)
+- `rankScore` (복합)
 
 ---
 
-### 2. `friendships` - 친구 관계
-```typescript
-{
-  id: string (auto-generated)
-  requesterId: string (users 컬렉션 참조)
-  addresseeId: string (users 컬렉션 참조)
-  status: 'pending' | 'accepted' | 'blocked'
-  acceptedAt?: Timestamp
-  createdAt: Timestamp
-  updatedAt: Timestamp
-}
-```
+### 2. `gameRooms` - 게임룸 (1단계: 경기 생성)
 
-**인덱스:**
-- `requesterId, status` (복합)
-- `addresseeId, status` (복합)
-- `requesterId, addresseeId` (복합, 중복 방지용)
-
----
-
-### 3. `gameRooms` - 게임룸 (1단계: 경기 생성)
 ```typescript
 {
   id: string (auto-generated)
@@ -69,6 +49,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ```
 
 **인덱스:**
+
 - `inviteCode` (단일, 유니크)
 - `hostId, status` (복합)
 - `guestId, status` (복합)
@@ -78,6 +59,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ---
 
 ### 4. `liveMatches` - 실시간 경기 (2단계: 경기 진행)
+
 ```typescript
 {
   id: string (auto-generated)
@@ -98,6 +80,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ```
 
 **인덱스:**
+
 - `gameRoomId` (단일)
 - `player1Id, status` (복합)
 - `player2Id, status` (복합)
@@ -106,6 +89,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ---
 
 ### 5. `matchResults` - 경기 결과 (3단계: 결과 확인)
+
 ```typescript
 {
   id: string (auto-generated)
@@ -127,6 +111,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ```
 
 **인덱스:**
+
 - `liveMatchId` (단일)
 - `player1Id, needsConfirmation` (복합)
 - `player2Id, needsConfirmation` (복합)
@@ -135,6 +120,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ---
 
 ### 6. `matches` - 확정된 경기 기록
+
 ```typescript
 {
   id: string (auto-generated)
@@ -155,6 +141,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ```
 
 **인덱스:**
+
 - `player1Id, gameDate` (복합)
 - `player2Id, gameDate` (복합)
 - `winnerId, gameDate` (복합)
@@ -164,6 +151,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ---
 
 ### 7. `pendingMatches` - 예약된 경기
+
 ```typescript
 {
   id: string (auto-generated)
@@ -180,6 +168,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ```
 
 **인덱스:**
+
 - `player1Id, status` (복합)
 - `player2Id, status` (복합)
 - `scheduledDate, status` (복합)
@@ -187,6 +176,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ---
 
 ### 8. `notifications` - 알림
+
 ```typescript
 {
   id: string (auto-generated)
@@ -207,6 +197,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ```
 
 **인덱스:**
+
 - `recipientId, isRead, createdAt` (복합)
 - `recipientId, type, isRead` (복합)
 - `expiresAt` (TTL 인덱스)
@@ -214,6 +205,7 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 ## 데이터 흐름
 
 ### 경기 생성 플로우
+
 1. **게임룸 생성** → `gameRooms` 컬렉션
 2. **초대코드 공유** → 상대방이 참여
 3. **라이브 매치 시작** → `liveMatches` 컬렉션
@@ -221,11 +213,13 @@ Firebase 연동을 위한 정규화된 데이터베이스 구조입니다.
 5. **결과 확인** → `matches` 컬렉션에 최종 저장
 
 ### 친구 관계 플로우
+
 1. **친구 요청** → `friendships` 컬렉션에 'pending' 상태로 생성
 2. **요청 수락/거절** → status 업데이트
 3. **친구 목록 조회** → 양방향 쿼리로 친구 목록 구성
 
 ### 알림 플로우
+
 1. **이벤트 발생** → `notifications` 컬렉션에 생성
 2. **실시간 구독** → 사용자별 알림 실시간 수신
 3. **읽음 처리** → isRead 플래그 업데이트
@@ -262,31 +256,34 @@ service cloud.firestore {
 ## 쿼리 패턴 예시
 
 ### 사용자 랭킹 조회
+
 ```typescript
 const rankingsQuery = query(
-  collection(db, 'users'),
-  where('isActive', '==', true),
-  orderBy('rankScore', 'desc'),
+  collection(db, "users"),
+  where("isActive", "==", true),
+  orderBy("rankScore", "desc"),
   limit(50)
 );
 ```
 
 ### 사용자 매치 히스토리
+
 ```typescript
 const userMatchesQuery = query(
-  collection(db, 'matches'),
-  where('player1Id', '==', userId),
-  orderBy('gameDate', 'desc'),
+  collection(db, "matches"),
+  where("player1Id", "==", userId),
+  orderBy("gameDate", "desc"),
   limit(20)
 );
 ```
 
 ### 미확인 알림 조회
+
 ```typescript
 const unreadNotificationsQuery = query(
-  collection(db, 'notifications'),
-  where('recipientId', '==', userId),
-  where('isRead', '==', false),
-  orderBy('createdAt', 'desc')
+  collection(db, "notifications"),
+  where("recipientId", "==", userId),
+  where("isRead", "==", false),
+  orderBy("createdAt", "desc")
 );
 ```
